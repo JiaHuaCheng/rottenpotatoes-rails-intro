@@ -11,15 +11,20 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @sort_by = params[:sort_by]
+    session.delete(:ratings_to_show) if params[:ratings].nil? and params[:commit] # params[:commit] is activated when we push buttom. Deselect all and push then clean. 
+    session.delete(:sort_by) if params[:ratings].nil? and params[:commit]
+    
+    @sort_by = params[:sort_by] || session[:sort_by] 
     @all_ratings = Movie.all_ratings
-    @ratings_to_show = params[:ratings]
-    if @ratings_to_show.nil? then 
-      @movies = Movie.all   
-    else
-      @movies = Movie.where(rating: @ratings_to_show.keys)  
-    end
-    @movies = @movies.order(@sort_by) if @sort_by
+    @ratings_to_show = params[:ratings] || session[:ratings_to_show]
+
+    # use session to store previous result
+    session[:ratings_to_show] = @ratings_to_show
+    session[:sort_by] = @sort_by
+    
+    @ratings_to_show.nil? ? @movies = Movie.all : @movies = Movie.where(rating: @ratings_to_show.keys)
+
+    @movies = @movies.order(@sort_by)
   end
 
   def new
